@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "biwenger-readonly-mcp"
+version = "0.1.0"
+description = "Cliente y MCP local de Biwenger, exclusivamente de consulta"
+requires-python = ">=3.12"
+dependencies = ["httpx>=0.28,<0.29", "pydantic>=2.11,<3", "mcp==2.1.1"]
+
+[project.scripts]
+biwenger = "biwenger_mcp.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.12,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/biwenger_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
