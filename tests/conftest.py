@@ -76,8 +76,8 @@ def payloads():
         },
         "market": {
             "sales": [
-                {"player": {"id": 101}, "user": {"id": 0}, "price": 1200000},
-                {"player": {"id": 102}, "user": {"id": 8001}, "price": 100},
+                {"player": {"id": 102}, "user": {"id": 0}, "price": 1200000},
+                {"player": {"id": 101}, "user": {"id": 8001}, "price": 100},
             ],
             "offers": [
                 {

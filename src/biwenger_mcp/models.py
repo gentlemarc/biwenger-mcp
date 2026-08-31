@@ -83,7 +83,7 @@ class Member(APIModel):
 
 class Sale(APIModel):
     player: OwnedPlayer
-    user: Member
+    user: Member | None = None
     price: StrictInt | None = None
     until: StrictInt | None = None
 

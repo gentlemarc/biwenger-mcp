@@ -405,9 +405,17 @@ class BiwengerClient:
                 "invalid_argument", "El precio máximo debe ser un entero no negativo."
             )
         market, catalog, snapshots = await self._market()
+        user_snapshot = await self.transport.read(USER)
+        user = parse(UserData, user_snapshot.data)
+        if user.id != self.settings.user_id:
+            raise BiwengerError("context_mismatch", "La plantilla corresponde a otro usuario.")
+        owned_ids = {owned.id for owned in user.players}
+        snapshots.append(user_snapshot)
         sales = []
         for sale in market.sales:
-            if sale.user.id == self.settings.user_id:
+            if sale.player.id in owned_ids or (
+                sale.user and sale.user.id == self.settings.user_id
+            ):
                 continue
             if max_price is not None and (sale.price is None or sale.price > max_price):
                 continue
@@ -415,7 +423,9 @@ class BiwengerClient:
                 {
                     "player": self._player_id(sale.player.id, catalog),
                     "asking_price": sale.price,
-                    "seller": {"id": sale.user.id, "name": text(sale.user.name)},
+                    "seller": {"id": sale.user.id, "name": text(sale.user.name)}
+                    if sale.user
+                    else None,
                     "until": timestamp(sale.until),
                 }
             )
@@ -425,6 +435,11 @@ class BiwengerClient:
                 sale["asking_price"] or 0,
                 sale["player"]["id"],
             )
+        )
+        warnings = (
+            ["Biwenger omite actualmente el vendedor del mercado; se devuelve como desconocido."]
+            if any(sale.user is None for sale in market.sales)
+            else None
         )
         return self.result(
             {
@@ -436,6 +451,7 @@ class BiwengerClient:
                 "currency": catalog.currency,
             },
             snapshots,
+            warnings,
         )
 
     async def get_received_offers(self, limit: int = 50, offset: int = 0) -> dict:

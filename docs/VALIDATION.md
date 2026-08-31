@@ -1,6 +1,6 @@
 # Validación de capacidades de Biwenger
 
-Fecha de comprobación: 2026-08-30T17:17:19.468690+00:00
+Fecha de comprobación: 2026-08-31T10:46:04.042490+00:00
 
 Solo se han ejecutado consultas GET. Los resultados privados no se guardan en este informe.
 
@@ -11,9 +11,9 @@ Solo se han ejecutado consultas GET. Los resultados privados no se guardan en es
 | `get_player` | catalog + player | public | verified |
 | `get_market_evolution` | evolution | public | verified |
 | `get_my_team` | catalog + home + user | private | verified |
-| `get_budget` | catalog + home + market | private | failed (schema_changed) |
-| `get_market` | catalog + home + market | private | failed (schema_changed) |
-| `get_received_offers` | catalog + home + market | private | failed (schema_changed) |
+| `get_budget` | catalog + home + market | private | verified |
+| `get_market` | catalog + home + market | private | verified |
+| `get_received_offers` | catalog + home + market | private | verified |
 | `get_next_round` | catalog + home | private | verified |
 
 `verified` significa que una consulta real y la validación del contrato tuvieron éxito.

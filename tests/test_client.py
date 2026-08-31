@@ -68,6 +68,16 @@ async def test_private_reads_have_correct_context_and_no_writes(client_factory, 
     assert len([request for request in requests if request.url.path == "/api/v2/market"]) == 1
 
 
+async def test_market_sale_without_seller_remains_unknown(client_factory, settings):
+    def remove_seller(data):
+        data["market"]["sales"][0]["user"] = None
+
+    client, _, _ = client_factory(settings, mutate=remove_seller)
+    market = await client.get_market()
+    assert market["data"]["total"] == 1
+    assert market["data"]["sales"][0]["seller"] is None
+
+
 @pytest.mark.parametrize("field,value", [("id", 9002), ("scoreID", 5), ("mode", "fantasy")])
 async def test_reject_other_league_score_or_mode(client_factory, settings, field, value):
     client, requests, _ = client_factory(

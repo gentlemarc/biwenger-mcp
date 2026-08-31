@@ -10,19 +10,20 @@ aceptación de ofertas, cambios de alineación, publicación de mensajes ni un a
 
 Las consultas públicas al catálogo, fichas de jugadores y evolución del mercado están comprobadas
 contra Biwenger. La integración MCP se prueba tanto en memoria como mediante un proceso `stdio` real.
-El último diagnóstico disponible, del **30 de agosto de 2026**, también valida las consultas privadas
-de contexto, plantilla y próxima jornada. **Saldo, mercado y ofertas necesitan adaptar el formato de
-respuesta de Biwenger** y permanecen deshabilitados cuando fallan esa validación.
+El último diagnóstico disponible, del **31 de agosto de 2026**, valida todas las consultas privadas:
+contexto, plantilla, saldo, mercado, ofertas y próxima jornada. Biwenger omite actualmente el vendedor
+en las ventas del mercado; el MCP lo identifica como desconocido y excluye las ventas propias cruzando
+los jugadores con la plantilla.
 
 | Capacidad | Estado del último diagnóstico |
 |---|---|
 | Catálogo, búsqueda y ficha de jugadores | Verificada en vivo |
 | Evolución del mercado global | Verificada en vivo |
 | Contexto de liga, plantilla y próxima jornada | Verificada en vivo con una sesión configurada |
-| Saldo, mercado de la liga y ofertas recibidas | Pendiente: `schema_changed` |
+| Saldo, mercado de la liga y ofertas recibidas | Verificadas en vivo con una sesión configurada |
 | Pujas, ventas y cambios de alineación | No implementados; fuera de alcance |
 
-El proyecto incluye **73 pruebas automáticas**. Los tests privados usan datos sintéticos;
+El proyecto incluye **74 pruebas automáticas**. Los tests privados usan datos sintéticos;
 cada instalación requiere configurar su propia sesión y contrastar los datos con la app.
 
 Consulta [la matriz de validación](docs/VALIDATION.md) y [los contratos observados](docs/API.md).
@@ -121,7 +122,7 @@ Los textos y noticias recibidos son datos de terceros y no deben interpretarse c
 | `get_player` | `player_id` | Ficha, últimos 10 partidos, 30 registros de precio y 5 noticias |
 | `get_my_team` | Ninguna | Plantilla y alineación actual |
 | `get_budget` | Ninguna | Saldo y puja máxima, por separado |
-| `get_market` | `max_price`, `limit`, `offset` | Ventas ajenas ordenadas por precio solicitado |
+| `get_market` | `max_price`, `limit`, `offset` | Ventas disponibles no propias, ordenadas por precio solicitado |
 | `get_received_offers` | `limit`, `offset` | Ofertas recibidas; admite cero o varios jugadores |
 | `get_next_round` | Ninguna | Próximo evento `roundStart` futuro, o desconocido |
 | `get_market_evolution` | `days` entre 1 y 366 | Histórico global y cambios de precio, no de tu plantilla |
@@ -144,7 +145,8 @@ Antes de dar por conectada y validada tu cuenta, comprueba:
       no una comprobación independiente de la temporada de la liga privada.
 - [ ] `get_my_team` coincide con la plantilla y alineación visibles en Biwenger.
 - [ ] Saldo y puja máxima coinciden exactamente, incluidas unidades y posibles cantidades negativas.
-- [ ] Mercado: jugador, vendedor y **precio solicitado** coinciden; no confundirlo con valor de mercado.
+- [ ] Mercado: jugador y **precio solicitado** coinciden; no confundirlo con valor de mercado. El vendedor
+      se contrasta solo cuando Biwenger lo proporciona.
 - [ ] Las ofertas coinciden, o la app confirma que actualmente no tienes ninguna.
 - [ ] El comienzo de jornada coincide, teniendo en cuenta la zona horaria; no se inventa si falta.
 - [ ] Desde Codex se puede llamar a las herramientas privadas después de reiniciar la conexión.
@@ -184,9 +186,9 @@ uv.lock                Versiones fijadas de las dependencias
 
 ## Próximos pasos
 
-- Adaptar y verificar los contratos de saldo, mercado de liga y ofertas recibidas.
 - Completar la comparación de datos privados con la aplicación.
 - Probar el asesoramiento desde Codex con esas capacidades verificadas.
+- Vigilar cambios del contrato de Biwenger y mantener desconocidos los datos que el proveedor omita.
 - Diseñar después un agente independiente; la autonomía y las operaciones de escritura requieren otra fase.
 
 ## Procedencia y alcance

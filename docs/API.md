@@ -1,8 +1,9 @@
 # Contratos de Biwenger observados
 
 Referencia: repositorio `pablopb3/biwenger-api`, commit `1b5172c622ba868a832576822ce6d2071f9c1349` (2020-01-25).
-Comprobaciones realizadas el 2026-08-30. Un diagnóstico posterior con sesión real valida `home` y `user`;
-las consultas basadas en `market` fallan con `schema_changed` y necesitan adaptación.
+Comprobaciones realizadas el 2026-08-31. El diagnóstico con sesión real valida `home`, `user` y `market`.
+En la respuesta observada, `sales[].user` puede ser `null`; el vendedor permanece desconocido y las
+ventas propias se excluyen cruzando los IDs con la plantilla.
 No se ha accedido a una cuenta mediante un código de invitación.
 
 Todas las llamadas implementadas son **GET**. El estado HTTP y el campo `status` del JSON deben ser 200.
@@ -15,7 +16,7 @@ La capa HTTP exige `data` como objeto y la capa de dominio valida los campos usa
 | evolution | `cf.biwenger.com/api/v2/competitions/la-liga/market` | `interval=day`, `includeValues=true` | Público, verificado | `competition`, `values`, `ups`, `downs` |
 | home | `biwenger.as.com/api/v2/home` | Ninguno | Privado, verificado en diagnóstico | `league`, `user`, `competition`, `events` |
 | user | `biwenger.as.com/api/v2/user` | `fields=*,lineup(type,playersID),players(*,fitness,team,owner),market(*,-userID),offers,-trophies` | Privado, verificado en diagnóstico | `id`, `players`, `lineup` |
-| market | `biwenger.as.com/api/v2/market` | Ninguno | Privado, requiere adaptar contrato | `sales`, `offers`, `status.balance`, `status.maximumBid` |
+| market | `biwenger.as.com/api/v2/market` | Ninguno | Privado, verificado en diagnóstico | `sales`, `offers`, `status.balance`, `status.maximumBid`; `sales[].user` puede ser `null` |
 
 Solo las rutas privadas reciben `Authorization: Bearer …`, `x-league`, `x-user` y el `x-version` configurado.
 Los IDs deben provenir de una petición de tu propia sesión a tu liga actual. El servidor no descubre ligas
@@ -35,10 +36,7 @@ ajenas ni se une a una liga. No se envía el token al dominio público `cf.biwen
 - No se presupone que una oferta tenga exactamente un jugador ni que exista una próxima jornada anunciada.
 - La caché y la unión por IDs sustituyen el servidor Go y la base MongoDB de alias del proyecto original.
 
-## Pendientes para la sesión real
+## Comprobaciones manuales pendientes
 
-1. Confirmar que los headers de la sesión actual funcionan y que `home` devuelve la identidad configurada.
-2. Validar los contratos privados con las respuestas reales sin guardarlas en archivos o registros.
-3. Resolver cualquier cambio de estructura antes de registrar la capacidad afectada en el MCP.
-4. Comprobar manualmente los ajustes omitidos por la API y las cantidades, alineación y mercado en la app.
-5. Confirmar en Codex las llamadas privadas. Las pruebas sintéticas no reemplazan estos pasos.
+1. Comprobar manualmente los ajustes omitidos por la API y las cantidades, alineación y mercado en la app.
+2. Confirmar en la interfaz de Codex las llamadas privadas. Las pruebas sintéticas y `stdio` no reemplazan este paso.
