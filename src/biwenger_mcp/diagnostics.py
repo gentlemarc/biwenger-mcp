@@ -27,7 +27,8 @@ async def diagnose(client: BiwengerClient, *, public_only: bool = False) -> dict
         "read_only": True,
         "configuration": {
             "competition": "la-liga",
-            "score_id": 2,
+            "score_id": client.settings.score_id,
+            "score_name": client.settings.score_name,
             "mode": "classic",
             "session_configured": client.settings.authenticated,
         },

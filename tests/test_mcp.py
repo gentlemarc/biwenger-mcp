@@ -12,14 +12,19 @@ async def test_mcp_handshake_discovery_and_structured_call(client_factory):
     async with Client(server) as mcp:
         tools = (await mcp.list_tools()).tools
         assert {tool.name for tool in tools} == {
+            "connect_biwenger",
+            "disconnect_biwenger",
             "get_context",
             "search_players",
             "get_player",
             "get_market_evolution",
         }
         for tool in tools:
-            assert tool.annotations.read_only_hint is True
-            assert tool.annotations.destructive_hint is False
+            if tool.name not in {"connect_biwenger", "disconnect_biwenger"}:
+                assert tool.annotations.read_only_hint is True
+                assert tool.annotations.destructive_hint is False
+            if tool.name == "disconnect_biwenger":
+                assert tool.annotations.destructive_hint is True
             schema = json.dumps(tool.input_schema)
             assert "token" not in schema and "password" not in schema
         result = await mcp.call_tool("search_players", {"query": "alvaro"})
@@ -32,7 +37,7 @@ async def test_mcp_enables_private_tools_only_after_verification(client_factory,
     server = build_server(client, await diagnose(client))
     async with Client(server) as mcp:
         names = {tool.name for tool in (await mcp.list_tools()).tools}
-        assert "get_budget" in names and len(names) == 9
+        assert "get_budget" in names and len(names) == 11
         result = await mcp.call_tool("get_budget")
         assert result.structured_content["data"]["balance"] == 5000000
         before = len(requests)

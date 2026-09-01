@@ -33,6 +33,7 @@ async def test_detail_chooses_score_2_and_orders_dates(client_factory):
     client, _, _ = client_factory()
     result = await client.get_player(101)
     assert result["data"]["recent_reports"][0]["sofascore_points"] == 7
+    assert result["data"]["recent_reports"][0]["points"] == 7
     assert [row["date"] for row in result["data"]["price_history"]] == ["2026-08-29", "2026-08-30"]
 
 
@@ -152,6 +153,37 @@ async def test_catalog_must_match_expected_competition_and_score(client_factory,
     with pytest.raises(BiwengerError) as error:
         await client.search_players()
     assert error.value.code == "context_mismatch"
+
+
+@pytest.mark.parametrize(
+    "score_id,score_name",
+    [
+        (1, "Diario AS"),
+        (2, "SofaScore"),
+        (3, "Estadísticas"),
+        (5, "Media AS y SofaScore"),
+        (6, "Biwenger Social"),
+        (7, "Feeberse Score"),
+        (8, "Media AS y Feeberse"),
+    ],
+)
+async def test_catalog_and_reports_follow_active_standard_score(
+    client_factory, settings, score_id, score_name
+):
+    def change(data):
+        data["catalog"]["scoreID"] = score_id
+        data["catalog"]["scores"] = [{"id": score_id, "name": score_name}]
+        data["home"]["league"]["scoreID"] = score_id
+        data["player"]["scoreID"] = score_id
+        data["player"]["reports"][0]["points"] = {str(score_id): 11, "99": 99}
+
+    configured = settings.model_copy(update={"score_id": score_id})
+    client, requests, _ = client_factory(configured, mutate=change)
+    result = await client.get_player(101)
+    assert result["meta"]["score_id"] == score_id
+    assert result["meta"]["score_name"] == score_name
+    assert result["data"]["recent_reports"][0]["points"] == 11
+    assert any(request.url.params.get("score") == str(score_id) for request in requests)
 
 
 async def test_missing_balance_is_not_zero(client_factory, settings):

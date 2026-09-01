@@ -13,17 +13,27 @@ from .config import Settings
 from .errors import BiwengerError
 from .models import Catalog, Evolution, HomeData, MarketData, Player, PlayerDetail, UserData
 from .transport import (
-    CATALOG,
     EVOLUTION,
     HOME,
     MARKET,
     USER,
     ReadOnlyTransport,
     Snapshot,
+    catalog_endpoint,
     player_endpoint,
 )
 
 T = TypeVar("T", bound=BaseModel)
+
+SCORE_NAME_ALIASES = {
+    1: {"diario as", "as"},
+    2: {"sofascore"},
+    3: {"estadisticas"},
+    5: {"media as y sofascore", "as + sofascore"},
+    6: {"biwenger social", "social"},
+    7: {"feeberse", "feeberse score"},
+    8: {"media as y feeberse", "as + feeberse"},
+}
 
 
 def parse(model: type[T], data: dict) -> T:
@@ -113,8 +123,8 @@ class BiwengerClient:
                 "data": data,
                 "meta": {
                     "competition": "la-liga",
-                    "score_id": 2,
-                    "score_name": "SofaScore",
+                    "score_id": self.settings.score_id,
+                    "score_name": self.settings.score_name,
                     "read_only": True,
                     "sources": [
                         {"endpoint": item.endpoint, "fetched_at": item.fetched_at}
@@ -127,17 +137,22 @@ class BiwengerClient:
         )
 
     async def catalog(self) -> tuple[Catalog, Snapshot]:
-        snapshot = await self.transport.read(CATALOG)
+        snapshot = await self.transport.read(catalog_endpoint(self.settings.score_id))
         catalog = parse(Catalog, snapshot.data)
         scores = {score.id: score for score in catalog.scores}
-        if catalog.slug != "la-liga" or catalog.id != 1 or catalog.score_id != 2:
+        if (
+            catalog.slug != self.settings.competition
+            or catalog.id != 1
+            or catalog.score_id != self.settings.score_id
+        ):
             raise BiwengerError(
-                "context_mismatch", "El catálogo no corresponde a LaLiga con SofaScore."
+                "context_mismatch",
+                "El catálogo no corresponde a LaLiga y la puntuación configuradas.",
             )
-        score = scores.get(2)
-        if score is None or normalized(score.name) != "sofascore":
+        score = scores.get(self.settings.score_id)
+        if score is None or normalized(score.name) not in SCORE_NAME_ALIASES[self.settings.score_id]:
             raise BiwengerError(
-                "context_mismatch", "No se pudo confirmar que score=2 corresponde a SofaScore."
+                "context_mismatch", "No se pudo confirmar el sistema de puntuación configurado."
             )
         if any(str(player.id) != key for key, player in catalog.players.items()):
             raise BiwengerError("schema_changed", "Los IDs del catálogo no son coherentes.")
@@ -166,9 +181,12 @@ class BiwengerClient:
         if league.settings:
             score_candidates.extend(league.settings.get(key) for key in ("scoreID", "score"))
         observed_scores = [value for value in score_candidates if value is not None]
-        if any(type(value) is not int or value != 2 for value in observed_scores):
+        if any(
+            type(value) is not int or value != self.settings.score_id
+            for value in observed_scores
+        ):
             raise BiwengerError(
-                "context_mismatch", "La puntuación de la liga no coincide con SofaScore exclusivo."
+                "context_mismatch", "La puntuación de la liga no coincide con la seleccionada."
             )
         mode = normalized(league.mode or "")
         mode_verified = mode in {"classic", "clasica"}
@@ -186,7 +204,8 @@ class BiwengerClient:
             "user_id": home.user.id,
             "user_name": text(home.user.name),
             "competition": "la-liga",
-            "score_id": 2,
+            "score_id": self.settings.score_id,
+            "score_name": self.settings.score_name,
             "mode": "classic",
             "verification": {
                 "identity": "api",
@@ -207,7 +226,7 @@ class BiwengerClient:
             "configured": self.settings.authenticated,
             "competition": catalog.slug,
             "score_id": catalog.score_id,
-            "score_name": "SofaScore",
+            "score_name": self.settings.score_name,
             "season": catalog.season.model_dump(),
             "currency": catalog.currency,
             "players_in_catalog": len(catalog.players),
@@ -290,11 +309,11 @@ class BiwengerClient:
             raise BiwengerError(
                 "player_not_found", "Jugador no encontrado en el catálogo actual de LaLiga."
             )
-        snapshot = await self.transport.read(player_endpoint(player.slug))
+        snapshot = await self.transport.read(player_endpoint(player.slug, self.settings.score_id))
         detail = parse(PlayerDetail, snapshot.data)
         if detail.id != player_id or detail.slug != player.slug:
             raise BiwengerError("context_mismatch", "La ficha recibida corresponde a otro jugador.")
-        if detail.score_id not in (None, 2) or (
+        if detail.score_id not in (None, self.settings.score_id) or (
             detail.competition and detail.competition.get("slug") != "la-liga"
         ):
             raise BiwengerError(
@@ -312,16 +331,21 @@ class BiwengerClient:
                 match = report.get("match") or {}
                 points = report.get("points")
                 if isinstance(points, dict):
-                    points = integer(points.get("2"))
+                    points = integer(points.get(str(self.settings.score_id)))
                 else:
-                    points = integer(points) if detail.score_id == 2 else None
+                    points = (
+                        integer(points) if detail.score_id == self.settings.score_id else None
+                    )
                 stats = report.get("rawStats") or {}
                 reports.append(
                     {
                         "match_id": integer(match.get("id")),
                         "date": timestamp(match.get("date")),
                         "round": text((match.get("round") or {}).get("name")),
-                        "sofascore_points": points,
+                        "points": points,
+                        "score_id": self.settings.score_id,
+                        "score_name": self.settings.score_name,
+                        "sofascore_points": points if self.settings.score_id == 2 else None,
                         "minutes_played": integer(stats.get("minutesPlayed")),
                         "home": report.get("home") if type(report.get("home")) is bool else None,
                     }

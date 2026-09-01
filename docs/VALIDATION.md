@@ -1,6 +1,6 @@
 # Validación de capacidades de Biwenger
 
-Fecha de comprobación: 2026-08-31T10:46:04.042490+00:00
+Fecha de comprobación: 2026-08-31T12:50:56.743799+00:00
 
 Solo se han ejecutado consultas GET. Los resultados privados no se guardan en este informe.
 

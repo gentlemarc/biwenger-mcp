@@ -1,204 +1,143 @@
 # Biwenger MCP
 
-**Un asistente para consultar tu equipo de Biwenger desde Codex, sin modificarlo.**
+MCP local y no oficial para consultar una liga de **LaLiga en modo Clásica** desde Claude Desktop o Codex. Lee plantilla, alineación, presupuesto, mercado, ofertas, jugadores y próxima jornada. No contiene herramientas para pujar, comprar, vender, aceptar ofertas ni cambiar la alineación.
 
-Cliente Python y servidor MCP local para **LaLiga Clásica con puntuación exclusivamente SofaScore**.
-Codex puede consultar estos datos y ayudarte a decidir. Este proyecto no contiene pujas, ventas,
-aceptación de ofertas, cambios de alineación, publicación de mensajes ni un agente autónomo.
+> Estado: beta privada. Los endpoints de Biwenger no forman parte de una API pública estable y pueden cambiar. Revisa las condiciones de uso antes de distribuir el proyecto.
 
-## Estado actual
+## Instalación sencilla en Claude Desktop
 
-Las consultas públicas al catálogo, fichas de jugadores y evolución del mercado están comprobadas
-contra Biwenger. La integración MCP se prueba tanto en memoria como mediante un proceso `stdio` real.
-El último diagnóstico disponible, del **31 de agosto de 2026**, valida todas las consultas privadas:
-contexto, plantilla, saldo, mercado, ofertas y próxima jornada. Biwenger omite actualmente el vendedor
-en las ventas del mercado; el MCP lo identifica como desconocido y excluye las ventas propias cruzando
-los jugadores con la plantilla.
+La extensión `biwenger-mcp-0.2.0.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
 
-| Capacidad | Estado del último diagnóstico |
-|---|---|
-| Catálogo, búsqueda y ficha de jugadores | Verificada en vivo |
-| Evolución del mercado global | Verificada en vivo |
-| Contexto de liga, plantilla y próxima jornada | Verificada en vivo con una sesión configurada |
-| Saldo, mercado de la liga y ofertas recibidas | Verificadas en vivo con una sesión configurada |
-| Pujas, ventas y cambios de alineación | No implementados; fuera de alcance |
+1. Descarga el `.mcpb` y su archivo `.sha256`.
+2. Abre **Claude Desktop → Settings → Extensions → Advanced settings → Install Extension**.
+3. Instala el archivo y pide a Claude que ejecute `connect_biwenger`.
+4. Introduce en la página local tu correo y la **contraseña propia de Biwenger**.
+5. Elige una liga compatible y reinicia la extensión.
+6. Ejecuta `get_context` y comprueba que liga y puntuación sean correctas.
 
-El proyecto incluye **74 pruebas automáticas**. Los tests privados usan datos sintéticos;
-cada instalación requiere configurar su propia sesión y contrastar los datos con la app.
+Las cuentas creadas con Google pueden establecer una contraseña propia mediante la [recuperación oficial de Biwenger](https://www.biwenger.com/faq/cuentas-contrasenas-combinar-cuentas/). Nunca introduzcas la contraseña de Google en esta extensión.
 
-Consulta [la matriz de validación](docs/VALIDATION.md) y [los contratos observados](docs/API.md).
-No se guardan códigos de invitación ni se realizan acciones para unirse a una liga.
+Consulta la [guía detallada](docs/INSTALL_CLAUDE.md), la [política de privacidad](docs/PRIVACY.md) y el [modelo de amenazas](docs/THREAT_MODEL.md).
 
-## Inicio rápido
+## Qué sistemas admite
 
-Requisitos: **Python 3.12 o superior** y [uv](https://docs.astral.sh/uv/getting-started/installation/).
-Clona el repositorio con una cuenta que tenga acceso y abre su carpeta en el terminal:
+La liga debe pertenecer a LaLiga, usar modo Clásica y una puntuación estándar:
 
-```sh
-git clone https://github.com/gentlemarc/biwenger-mcp.git
-cd biwenger-mcp
-uv sync --frozen
-uv run --frozen biwenger diagnose --public
-uv run --frozen biwenger query search_players --arguments '{"query":"Catena","limit":5}'
-```
+| `scoreID` | Sistema |
+|---:|---|
+| 1 | Diario AS |
+| 2 | SofaScore |
+| 3 | Estadísticas |
+| 5 | Media AS y SofaScore |
+| 6 | Biwenger Social |
+| 7 | Feeberse Score |
+| 8 | Media AS y Feeberse |
 
-También puedes ejecutar directamente `.venv/bin/biwenger` tras instalar las dependencias.
-No necesitas Docker, MongoDB, servidor público ni una clave de OpenAI para este MCP: no realiza llamadas a modelos.
-`uv.lock` fija las versiones transitivas. El SDK utilizado es el oficial `mcp==2.1.1`.
-
-## Conectar tu cuenta sin compartir el token
-
-En macOS también puedes abrir **Conectar Biwenger.command** con Terminal: guía la configuración y
-ejecuta el diagnóstico. Si el sistema te pregunta con qué aplicación abrirlo, selecciona Terminal.
-
-1. Abre la web de Biwenger e inicia sesión tú mismo.
-2. Selecciona tu liga actual y comprueba que es **LaLiga, Clásica, solo SofaScore**, no la media AS/SofaScore.
-3. Abre las herramientas de desarrollador del navegador y la pestaña **Red / Network**.
-4. Visita Inicio, Equipo o Mercado. Selecciona una consulta a `api/v2/home`, `api/v2/user` o `api/v2/market`.
-5. En **Request headers**, localiza `Authorization`, `x-league`, `x-user` y, si aparece, `x-version`.
-6. Ejecuta en un terminal local:
-
-```sh
-uv run --frozen biwenger configure
-```
-
-Pega el token solo cuando el terminal lo solicite: **no se muestra al escribir**. Se admite el prefijo `Bearer`.
-Introduce los IDs numéricos de `x-league` y `x-user`; el código de invitación de la liga no los sustituye.
-Si no encuentras las cabeceras, selecciona la petición GET a `/api/v2/home` y abre **Preview / Vista previa**:
-`data → league → id` es el ID de liga, y `data → user → id` es el ID de usuario dentro de esa liga.
-Comprueba que `data → league → name` corresponde a la liga seleccionada. Si `x-version` no aparece, pulsa Enter.
-No pegues un cURL completo, un HAR, el token o la contraseña en el chat. No exportes todas las cookies del navegador.
-
-La sesión se guarda en `.local/session.json` con permisos `600`, dentro de una carpeta `700`, excluida de Git.
-El token se guarda localmente en texto claro protegido por permisos, **no cifrado**: no compartas ni subas `.local/`.
-No se guarda la contraseña. `--config RUTA` o `BIWENGER_CONFIG` permiten elegir otra ruta privada.
-
-Si la API omite la puntuación o el modo de liga, se usa tu confirmación explícita de esos ajustes al configurar
-la sesión, y el resultado lo identifica como `operator_confirmed`, nunca como una verificación de la API.
-Una contradicción explícita de competición, puntuación, modo o identidad bloquea las consultas privadas.
-
-Después:
-
-```sh
-uv run --frozen biwenger diagnose --report docs/VALIDATION.md
-```
-
-El diagnóstico ejecuta solo GET y guarda únicamente estado, campos y advertencias, sin respuestas privadas completas.
-`--public` garantiza que no se consultan endpoints privados, incluso si hay una sesión configurada.
-
-## Usarlo en Codex
-
-La configuración se obtiene sin mostrar credenciales:
-
-```sh
-uv run --frozen biwenger codex-config
-```
-
-Añade el bloque resultante a la configuración MCP de Codex, conservando las demás entradas. Si esta entrega
-ya está registrada como `biwenger`, no la añadas de nuevo. El proceso arranca con un comando local `stdio`,
-sin escuchar en ningún puerto. Se configuran 60 segundos para arranque y llamadas.
-
-Al iniciar, el servidor valida las operaciones y **solo registra las que funcionaron**; `get_context` siempre
-está disponible como diagnóstico. Sin sesión privada aparecerán normalmente cuatro herramientas.
-Después de configurar o renovar la sesión, reinicia la conexión MCP o vuelve a abrir Codex para repetir esa validación.
-Si el servicio no responde al arrancar, puede quedar solo `get_context`; reinicia la conexión cuando se recupere.
-
-Ejemplos de preguntas una vez conectada y verificada la sesión:
-
-- «Consulta mi equipo y dime qué posiciones tengo peor cubiertas. Señala los datos que falten».
-- «¿Cuál es mi saldo y mi puja máxima? No hagas ninguna operación».
-- «Compara jugadores del mercado que entren en mi presupuesto, usando sus puntos SofaScore».
-- «¿Cuándo comienza la próxima jornada según Biwenger?».
-
-La decisión deportiva corresponde al asistente; el MCP aporta datos, no predicciones de titularidad garantizadas.
-Los textos y noticias recibidos son datos de terceros y no deben interpretarse como instrucciones.
+Se rechazan las puntuaciones personalizadas, otros modos y otras competiciones. Cada respuesta identifica el `scoreID`, el nombre del sistema y cuándo se obtuvieron sus fuentes.
 
 ## Herramientas
 
-| Nombre | Entradas | Resultado |
-|---|---|---|
-| `get_context` | Ninguna | Contexto, temporada, verificación, capacidades y conexión |
-| `search_players` | `query`, `position`, `max_price`, `limit`, `offset` | Catálogo paginado con puntos SofaScore |
-| `get_player` | `player_id` | Ficha, últimos 10 partidos, 30 registros de precio y 5 noticias |
-| `get_my_team` | Ninguna | Plantilla y alineación actual |
-| `get_budget` | Ninguna | Saldo y puja máxima, por separado |
-| `get_market` | `max_price`, `limit`, `offset` | Ventas disponibles no propias, ordenadas por precio solicitado |
-| `get_received_offers` | `limit`, `offset` | Ofertas recibidas; admite cero o varios jugadores |
-| `get_next_round` | Ninguna | Próximo evento `roundStart` futuro, o desconocido |
-| `get_market_evolution` | `days` entre 1 y 366 | Histórico global y cambios de precio, no de tu plantilla |
+| Herramienta | Función |
+|---|---|
+| `connect_biwenger` | Abre el asistente local para conectar o renovar la sesión. |
+| `disconnect_biwenger` | Abre una confirmación local para eliminar la sesión. |
+| `get_context` | Liga, competición, temporada, puntuación y conexión. |
+| `get_my_team` | Plantilla enriquecida y alineación visible. |
+| `get_budget` | Saldo y puja máxima. |
+| `get_market` | Jugadores disponibles, precios y vendedores visibles. |
+| `get_received_offers` | Ofertas recibidas, sin aceptarlas. |
+| `search_players` | Búsqueda paginada por nombre, posición y precio. |
+| `get_player` | Ficha, partidos recientes, noticias e histórico de precios. |
+| `get_next_round` | Próximo inicio de jornada que Biwenger proporcione. |
+| `get_market_evolution` | Evolución global del mercado de LaLiga. |
 
-`limit` admite 1–100; `offset`, 0–10000. Las posiciones siguen la codificación del catálogo:
-1 portero, 2 defensa, 3 centrocampista, 4 delantero, 5 entrenador. Los importes se mantienen como enteros
-según la API y se acompañan de su moneda; hay que contrastar las cantidades privadas con la app.
+Al arrancar se ejecuta un diagnóstico acotado. Solo se registran las consultas deportivas cuyo contrato se haya verificado; conexión y desconexión siempre están disponibles. Tras conectar por primera vez hay que reiniciar la extensión para repetir ese diagnóstico con la sesión nueva.
 
-Cada resultado incluye fuentes, instante de obtención UTC, TTL y advertencias. La caché es de 60 segundos
-y solo vive en memoria; el token de la sesión se carga al arrancar. Los datos ausentes son `null`, no cero.
-Las fechas de próximos eventos se devuelven en UTC; conviértelas a Europe/Madrid al interpretarlas.
-Las fechas del histórico de precios llegan como `YYMMDD` y se devuelven como `YYYY-MM-DD`.
+## Seguridad y datos
 
-## Verificación de la liga en la aplicación
+- El asistente escucha solo en `127.0.0.1`, usa nonce, caduca en diez minutos, limita los cuerpos y no registra credenciales.
+- La contraseña se usa exclusivamente para `POST /api/v2/auth/login` y se descarta después.
+- El token se guarda en el llavero de macOS. El archivo de preferencias no contiene secretos.
+- El transporte deportivo permite únicamente `GET` contra hosts y rutas cerradas.
+- No se siguen redirecciones ni proxies del entorno y se limitan tiempos, reintentos y tamaños de respuesta.
+- Los campos ausentes se devuelven como desconocidos; no se convierten en cero.
+- Nombres, noticias y textos de terceros se tratan como datos no fiables.
 
-Antes de dar por conectada y validada tu cuenta, comprueba:
+El [diagrama del flujo de datos](docs/ARCHITECTURE.md) explica los límites entre Claude, el proceso local, el llavero y Biwenger.
 
-- [ ] `get_context` muestra tu liga y usuario correctos, LaLiga y SofaScore exclusivo.
-- [ ] La temporada del catálogo corresponde a la temporada que estás jugando; es información pública,
-      no una comprobación independiente de la temporada de la liga privada.
-- [ ] `get_my_team` coincide con la plantilla y alineación visibles en Biwenger.
-- [ ] Saldo y puja máxima coinciden exactamente, incluidas unidades y posibles cantidades negativas.
-- [ ] Mercado: jugador y **precio solicitado** coinciden; no confundirlo con valor de mercado. El vendedor
-      se contrasta solo cuando Biwenger lo proporciona.
-- [ ] Las ofertas coinciden, o la app confirma que actualmente no tienes ninguna.
-- [ ] El comienzo de jornada coincide, teniendo en cuenta la zona horaria; no se inventa si falta.
-- [ ] Desde Codex se puede llamar a las herramientas privadas después de reiniciar la conexión.
+## Desarrollo
 
-## Pruebas y mantenimiento
+Requiere `uv` para trabajar desde el repositorio:
 
-```sh
-uv run --frozen pytest -q
-uv run --frozen ruff check src tests scripts
-uv run --frozen python scripts/smoke_stdio.py
+```bash
+uv sync --all-groups
+uv run pytest
+uv run ruff check src tests scripts mcpb_server.py
 ```
 
-`pytest` no necesita red ni cuenta real. El último comando sí consulta Biwenger, siempre en modo público,
-y comprueba descubrimiento MCP, las cuatro herramientas públicas y rechazo de una herramienta de pujas inexistente.
+Consultas desde terminal:
 
-Protecciones: lista cerrada de endpoints, únicamente GET, validación de slugs, ausencia de redirecciones,
-credenciales solo para `biwenger.as.com`, sin proxies implícitos, tamaño de respuesta máximo 8 MiB,
-15 segundos por petición, hasta dos reintentos adicionales en fallos transitorios y respeto de `Retry-After`.
-No se reintenta automáticamente un 401/403 ni se intenta superar CAPTCHA o bloqueos de acceso.
-Los errores nunca devuelven el cuerpo HTTP, excepciones del proveedor o credenciales. No hay logs de cuerpos.
+```bash
+uv run biwenger connect
+uv run biwenger diagnose
+uv run biwenger query get_context
+uv run biwenger query search_players --arguments '{"query":"Álvaro","limit":5}'
+```
 
-Ante `auth_required`, repite `configure`; ante `context_mismatch`, revisa liga, usuario y puntuación.
-Ante `schema_changed`, no confíes en resultados de esa operación: hay que adaptar su contrato y repetir pruebas.
-La API de la web puede cambiar sin aviso; el proyecto original no constituye un contrato oficial de estabilidad.
-
-## Estructura
+Para una instalación nueva, `connect` usa el llavero y guarda preferencias en:
 
 ```text
-src/biwenger_mcp/       Cliente HTTP, modelos, configuración, diagnóstico y servidor MCP
-tests/                 Pruebas offline con datos sintéticos
-scripts/               Prueba stdio y registro opcional en Codex
-docs/                  Contratos observados, validación y comprobaciones
-Conectar Biwenger.command  Configurador interactivo para macOS
-pyproject.toml          Paquete Python y comandos
-uv.lock                Versiones fijadas de las dependencias
+~/Library/Application Support/Biwenger MCP/settings.json
 ```
 
-## Próximos pasos
+### Compatibilidad con la sesión antigua de Codex
 
-- Completar la comparación de datos privados con la aplicación.
-- Probar el asesoramiento desde Codex con esas capacidades verificadas.
-- Vigilar cambios del contrato de Biwenger y mantener desconocidos los datos que el proveedor omita.
-- Diseñar después un agente independiente; la autonomía y las operaciones de escritura requieren otra fase.
+Un archivo `.local/session.json` ya existente no se migra ni se borra. Solo se carga cuando se pasa explícitamente:
 
-## Procedencia y alcance
+```bash
+uv run biwenger --config .local/session.json diagnose
+uv run biwenger --config .local/session.json serve
+```
 
-Implementación nueva, usando como referencia el mapa de llamadas de
-[pablopb3/biwenger-api](https://github.com/pablopb3/biwenger-api), revisión `1b5172c622ba868a832576822ce6d2071f9c1349`.
-No se ejecuta su servidor Go, sus scripts, su función de Twitter ni sus ejemplos de escritura.
-El SDK es [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk).
-La conexión local está descrita en la [documentación de MCP de OpenAI](https://developers.openai.com/codex/mcp/).
+Ese modo conserva el comportamiento anterior y su token en archivo con permisos `600`. No publiques `.local/`.
 
-Uso personal sobre tu propia sesión y datos a los que ya tienes acceso. Respeta las condiciones y límites de Biwenger.
-Quedan fuera de esta versión: multiliga, otros sistemas de puntuación, escritura, despliegue remoto,
-memoria histórica persistente, automatizaciones y agente autónomo.
+## Construir el MCPB
+
+Instala la herramienta oficial y ejecuta el constructor cerrado:
+
+```bash
+npm install -g @anthropic-ai/mcpb
+uv run python scripts/build_mcpb.py
+```
+
+El script:
+
+1. copia a una carpeta temporal solo el manifiesto, código, lockfile, icono, licencia y documentación pública permitidos;
+2. valida y empaqueta con MCPB;
+3. compara todos los miembros del ZIP con la lista esperada;
+4. firma el artefacto con un certificado autocreado de pruebas;
+5. verifica la firma y genera el SHA-256.
+
+La salida queda en `dist/`, que no se versiona. Para una release pública debe usarse una firma de distribución y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.0.md).
+
+## Validación real
+
+Antes de considerar estable una versión:
+
+- compara liga, puntuación y temporada con Biwenger;
+- compara plantilla y alineación;
+- compara saldo y puja máxima;
+- compara jugadores y precios del mercado;
+- prueba sesión caducada, reconexión y desconexión;
+- instala el `.mcpb` en un perfil limpio de Claude Desktop;
+- revisa seguridad, privacidad y condiciones vigentes del servicio.
+
+Las pruebas automatizadas usan respuestas sintéticas anonimizadas. No sustituyen esta comparación manual.
+
+## Próxima entrega
+
+El análisis de rivales añadirá `get_league_standings`, `list_league_members` y `get_league_team(member_id)`. Validará que el participante pertenezca a la liga y no devolverá correo, saldo, dispositivos ni otros datos de cuenta. La alineación rival seguirá siendo desconocida cuando Biwenger no la proporcione.
+
+## Licencia y atribución
+
+[MIT](LICENSE). Proyecto no afiliado, patrocinado ni respaldado por Biwenger o Diario AS. “Biwenger” y las marcas relacionadas pertenecen a sus titulares.

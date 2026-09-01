@@ -13,7 +13,7 @@ from typing import Any
 
 import httpx
 
-from .config import Settings
+from .config import SUPPORTED_SCORES, Settings
 from .errors import BiwengerError
 
 PUBLIC = "https://cf.biwenger.com"
@@ -37,9 +37,17 @@ class Endpoint:
         return (PRIVATE if self.private else PUBLIC) + self.path
 
 
-CATALOG = Endpoint(
-    "catalog", "/api/v2/competitions/la-liga/data", params=(("lang", "es"), ("score", "2"))
-)
+def catalog_endpoint(score_id: int) -> Endpoint:
+    if score_id not in SUPPORTED_SCORES:
+        raise BiwengerError("unsupported_score", "Sistema de puntuación no compatible.")
+    return Endpoint(
+        "catalog",
+        "/api/v2/competitions/la-liga/data",
+        params=(("lang", "es"), ("score", str(score_id))),
+    )
+
+
+CATALOG = catalog_endpoint(2)
 EVOLUTION = Endpoint(
     "evolution",
     "/api/v2/competitions/la-liga/market",
@@ -48,25 +56,29 @@ EVOLUTION = Endpoint(
 HOME = Endpoint("home", "/api/v2/home", True)
 USER = Endpoint("user", "/api/v2/user", True, (("fields", USER_FIELDS),))
 MARKET = Endpoint("market", "/api/v2/market", True)
-FIXED_ENDPOINTS = (CATALOG, EVOLUTION, HOME, USER, MARKET)
+FIXED_ENDPOINTS = (EVOLUTION, HOME, USER, MARKET)
 
 
-def player_endpoint(slug: str) -> Endpoint:
+def player_endpoint(slug: str, score_id: int = 2) -> Endpoint:
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) or len(slug) > 150:
         raise BiwengerError("invalid_player", "Identificador de jugador no válido.")
     return Endpoint(
         "player",
         f"/api/v2/players/la-liga/{slug}",
-        params=(("fields", PLAYER_FIELDS), ("score", "2"), ("lang", "es")),
+        params=(("fields", PLAYER_FIELDS), ("score", str(score_id)), ("lang", "es")),
     )
 
 
 def validate_endpoint(endpoint: Endpoint) -> None:
     if endpoint in FIXED_ENDPOINTS:
         return
+    if endpoint.name == "catalog" and endpoint.path == "/api/v2/competitions/la-liga/data":
+        if endpoint in {catalog_endpoint(score_id) for score_id in SUPPORTED_SCORES}:
+            return
     prefix = "/api/v2/players/la-liga/"
     if endpoint.name == "player" and endpoint.path.startswith(prefix):
-        if endpoint == player_endpoint(endpoint.path[len(prefix) :]):
+        slug = endpoint.path[len(prefix) :]
+        if endpoint in {player_endpoint(slug, score_id) for score_id in SUPPORTED_SCORES}:
             return
     raise BiwengerError(
         "request_blocked", "La operación no pertenece a la lista de consultas permitidas."
@@ -95,7 +107,7 @@ class ReadOnlyTransport:
             follow_redirects=False,
             trust_env=False,
             transport=http_transport,
-            headers={"Accept": "application/json", "User-Agent": "biwenger-readonly-mcp/0.1"},
+            headers={"Accept": "application/json", "User-Agent": "biwenger-readonly-mcp/0.2"},
         )
         self._cache: dict[Endpoint, Snapshot] = {}
         self._locks: dict[Endpoint, asyncio.Lock] = {}
@@ -112,7 +124,7 @@ class ReadOnlyTransport:
         validate_endpoint(endpoint)
         if endpoint.private and not self.settings.authenticated:
             raise BiwengerError(
-                "not_configured", "Configura la sesión local con biwenger configure."
+                "not_configured", "Conecta tu cuenta con la herramienta connect_biwenger."
             )
         async with self._locks.setdefault(endpoint, asyncio.Lock()):
             cached = self._cache.get(endpoint)
@@ -145,7 +157,7 @@ class ReadOnlyTransport:
                         self.clear()
                         raise BiwengerError(
                             "auth_required",
-                            "La sesión ha caducado o no es válida; renueva el token local.",
+                            "La sesión ha caducado; usa connect_biwenger para renovarla.",
                         )
                     if status == 403:
                         self.clear()

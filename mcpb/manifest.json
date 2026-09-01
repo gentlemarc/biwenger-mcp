@@ -1,0 +1,53 @@
+{
+  "manifest_version": "0.4",
+  "name": "biwenger-mcp",
+  "display_name": "Biwenger MCP",
+  "version": "0.2.0",
+  "description": "Consulta tu liga de Biwenger desde Claude Desktop sin modificar el equipo.",
+  "long_description": "Extensión local y no oficial para LaLiga en modo Clásica. Conecta una cuenta mediante un asistente que solo escucha en 127.0.0.1, guarda la sesión en el llavero de macOS y ofrece herramientas de consulta para plantilla, presupuesto, mercado, jugadores y jornada.",
+  "author": {
+    "name": "gentlemarc",
+    "url": "https://github.com/gentlemarc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gentlemarc/biwenger-mcp.git"
+  },
+  "homepage": "https://github.com/gentlemarc/biwenger-mcp",
+  "documentation": "https://github.com/gentlemarc/biwenger-mcp#readme",
+  "support": "https://github.com/gentlemarc/biwenger-mcp/issues",
+  "icon": "assets/icon.png",
+  "server": {
+    "type": "uv",
+    "entry_point": "mcpb_server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "${__dirname}", "mcpb_server.py"]
+    }
+  },
+  "tools": [
+    {"name": "connect_biwenger", "description": "Abre el asistente local para conectar o renovar la cuenta."},
+    {"name": "disconnect_biwenger", "description": "Abre una confirmación local para eliminar la sesión."},
+    {"name": "get_context", "description": "Consulta liga, temporada, puntuación y estado de conexión."},
+    {"name": "get_my_team", "description": "Consulta la plantilla propia y la alineación visible."},
+    {"name": "get_budget", "description": "Consulta saldo y puja máxima."},
+    {"name": "get_market", "description": "Consulta los jugadores disponibles en el mercado."},
+    {"name": "get_received_offers", "description": "Consulta ofertas recibidas sin aceptarlas."},
+    {"name": "search_players", "description": "Busca jugadores en el catálogo de LaLiga."},
+    {"name": "get_player", "description": "Consulta la ficha, partidos e histórico de precio de un jugador."},
+    {"name": "get_next_round", "description": "Consulta el siguiente inicio de jornada disponible."},
+    {"name": "get_market_evolution", "description": "Consulta la evolución global del mercado."}
+  ],
+  "tools_generated": true,
+  "keywords": ["biwenger", "fantasy-football", "laliga", "mcp", "read-only"],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://github.com/gentlemarc/biwenger-mcp/blob/main/docs/PRIVACY.md",
+    "https://www.biwenger.com/"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=1.40609.0",
+    "platforms": ["darwin"],
+    "runtimes": {"python": ">=3.11,<4"}
+  }
+}

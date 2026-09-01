@@ -22,7 +22,14 @@ async def main():
     async with Client(params, read_timeout_seconds=60) as client:
         tools = (await client.list_tools()).tools
         names = {tool.name for tool in tools}
-        expected = {"get_context", "search_players", "get_player", "get_market_evolution"}
+        expected = {
+            "connect_biwenger",
+            "disconnect_biwenger",
+            "get_context",
+            "search_players",
+            "get_player",
+            "get_market_evolution",
+        }
         assert names == expected, f"Capacidades inesperadas: {names}"
         context = await client.call_tool("get_context")
         assert not context.is_error

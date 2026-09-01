@@ -8,13 +8,14 @@ import getpass
 import json
 import logging
 import sys
+import time
 import warnings
 from pathlib import Path
 
 from pydantic import SecretStr, ValidationError
 
 from .client import BiwengerClient
-from .config import Settings, default_config_path, load_settings, project_root, save_settings
+from .config import SUPPORTED_SCORES, Settings, load_settings, project_root, save_settings
 from .diagnostics import OPERATIONS, diagnose, markdown_report
 from .errors import BiwengerError
 
@@ -44,14 +45,21 @@ def configure(path: Path) -> None:
             "Los IDs deben ser numéricos; el código de invitación no sirve como ID.",
         ) from None
     version = input("x-version (opcional, Enter si no aparece): ").strip() or None
+    try:
+        score_id = int(input("scoreID de la liga (1, 2, 3, 5, 6, 7 u 8): ").strip())
+    except ValueError:
+        raise BiwengerError("invalid_config", "El scoreID debe ser numérico.") from None
+    if score_id not in SUPPORTED_SCORES:
+        raise BiwengerError("unsupported_score", "La puntuación no es compatible.")
     confirmed = input(
-        "¿Has comprobado en la app LaLiga, modo Clásica y SOLO SofaScore? [sí/no]: "
+        "¿Has comprobado en la app LaLiga, modo Clásica y puntuación estándar? [sí/no]: "
     ).strip().casefold() in {"sí", "si", "s", "yes"}
     settings = Settings(
         token=SecretStr(token),
         league_id=league_id,
         user_id=user_id,
         client_version=version,
+        score_id=score_id,
         league_settings_confirmed=confirmed,
     )
     save_settings(settings, path)
@@ -59,6 +67,23 @@ def configure(path: Path) -> None:
     print(
         "Ejecuta biwenger diagnose para verificar las consultas privadas y reinicia la conexión MCP."
     )
+
+
+def browser_wizard(mode: str) -> int:
+    from .onboarding import wizard_manager
+
+    result = wizard_manager.start(mode)
+    print("Se ha abierto el asistente local en el navegador. Esta página caduca en diez minutos.")
+    if result["status"] != "browser_opened":
+        print(result["url"])
+    active = wizard_manager._active
+    try:
+        while active and not active.complete and not active.expired():
+            time.sleep(0.2)
+    finally:
+        if active:
+            active.stop()
+    return 0 if active and active.complete else 1
 
 
 async def run_command(args, settings: Settings) -> int:
@@ -103,10 +128,15 @@ def main() -> int:
         description="Biwenger de solo lectura: cliente local y MCP stdio."
     )
     parser.add_argument(
-        "--config", type=Path, default=default_config_path(), help="Archivo privado local de sesión"
+        "--config",
+        type=Path,
+        default=None,
+        help="Archivo de sesión antiguo; solo se usa si se indica explícitamente",
     )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("configure", help="Introduce la sesión en un terminal con token oculto")
+    sub.add_parser("connect", help="Abre el asistente local de conexión")
+    sub.add_parser("disconnect", help="Abre la confirmación local de desconexión")
     sub.add_parser("serve", help="Inicia el MCP stdio, habilitando solo consultas verificadas")
     diagnostic = sub.add_parser(
         "diagnose", help="Verifica endpoints sin guardar respuestas privadas"
@@ -124,13 +154,22 @@ def main() -> int:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     try:
         if args.command == "configure":
+            if args.config is None:
+                return browser_wizard("connect")
             configure(args.config)
             return 0
+        if args.command == "connect":
+            return browser_wizard("connect")
+        if args.command == "disconnect":
+            return browser_wizard("disconnect")
         if args.command == "codex-config":
             executable = project_root() / ".venv" / "bin" / "biwenger"
             print("[mcp_servers.biwenger]")
             print("command = " + json.dumps(str(executable)))
-            print("args = " + json.dumps(["--config", str(args.config.resolve()), "serve"]))
+            server_args = ["serve"]
+            if args.config is not None:
+                server_args = ["--config", str(args.config.resolve()), "serve"]
+            print("args = " + json.dumps(server_args))
             print("startup_timeout_sec = 60\ntool_timeout_sec = 60")
             return 0
         return asyncio.run(run_command(args, load_settings(args.config)))
