@@ -38,7 +38,7 @@ class LeagueChoice:
     user_id: int
     name: str
     competition: str
-    mode: str
+    market_mode: str
     score_id: int
     score_name: str
     client_version: str | None
@@ -48,7 +48,7 @@ class LeagueChoice:
             "league_id": self.league_id,
             "name": self.name[:200],
             "competition": self.competition,
-            "mode": self.mode,
+            "market_mode": self.market_mode,
             "score_id": self.score_id,
             "score_name": self.score_name,
         }
@@ -87,7 +87,7 @@ class AuthenticationClient:
             transport=http_transport,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "biwenger-readonly-mcp/0.2.1",
+                "User-Agent": "biwenger-readonly-mcp/0.2.2",
                 "x-lang": "es",
             },
         )
@@ -163,7 +163,7 @@ class AuthenticationClient:
         if not leagues:
             raise BiwengerError(
                 "no_compatible_leagues",
-                "No hay ligas compatibles: se admite LaLiga en modo Clásica y puntuación estándar.",
+                "No hay ligas compatibles: se admite LaLiga con fichajes Clásica y sistemas de puntuación predefinidos.",
             )
         return AuthenticationSession(secret, tuple(leagues))
 
@@ -193,7 +193,9 @@ class AuthenticationClient:
             competition = raw.get("competition")
             if isinstance(competition, dict):
                 competition = competition.get("slug")
-            mode = _normalized(str(raw.get("mode") or raw.get("type") or ""))
+            api_mode = _normalized(str(raw.get("mode") or ""))
+            league_type = _normalized(str(raw.get("type") or ""))
+            market_mode = _normalized(str(raw.get("marketMode") or ""))
             score_id = _integer(raw.get("scoreID"))
             settings = raw.get("settings")
             custom = settings.get("customScore") if isinstance(settings, dict) else None
@@ -201,7 +203,9 @@ class AuthenticationClient:
                 league_id is None
                 or user_id is None
                 or competition != "la-liga"
-                or mode not in {"classic", "clasica"}
+                or api_mode != "league"
+                or league_type != "normal"
+                or market_mode != "classic"
                 or score_id not in SUPPORTED_SCORES
                 or bool(custom)
             ):
@@ -213,7 +217,7 @@ class AuthenticationClient:
                     user_id=user_id,
                     name=name if isinstance(name, str) and name.strip() else "Liga sin nombre",
                     competition="la-liga",
-                    mode="classic",
+                    market_mode="classic",
                     score_id=score_id,
                     score_name=SUPPORTED_SCORES[score_id],
                     client_version=version,
@@ -254,4 +258,15 @@ class AuthenticationClient:
         observed_score = league.get("scoreID")
         if observed_score is not None and observed_score != choice.score_id:
             raise BiwengerError("context_mismatch", "La puntuación de la liga ha cambiado.")
+        competition = data.get("competition")
+        if isinstance(competition, dict):
+            competition = competition.get("slug")
+        if competition not in (None, choice.competition):
+            raise BiwengerError("context_mismatch", "La competición de la liga ha cambiado.")
+        if (
+            _normalized(str(league.get("mode") or "")) not in {"", "league"}
+            or _normalized(str(league.get("type") or "")) not in {"", "normal"}
+            or _normalized(str(league.get("marketMode") or "")) not in {"", "classic"}
+        ):
+            raise BiwengerError("context_mismatch", "El tipo de liga ha cambiado.")
         return choice.settings(session.token)

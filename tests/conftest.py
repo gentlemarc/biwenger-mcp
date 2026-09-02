@@ -63,7 +63,14 @@ def payloads():
             "news": [{"title": "Noticia sintética", "url": "https://example.com/noticia"}],
         },
         "home": {
-            "league": {"id": 9001, "name": "Liga de pruebas", "mode": "classic", "scoreID": 2},
+            "league": {
+                "id": 9001,
+                "name": "Liga de pruebas",
+                "mode": "league",
+                "type": "normal",
+                "marketMode": "classic",
+                "scoreID": 2,
+            },
             "user": {"id": 8001, "name": "Usuario sintético"},
             "competition": "la-liga",
             "events": [],

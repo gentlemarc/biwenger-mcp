@@ -27,10 +27,10 @@ def build_server(
     enabled = enabled_tools(report)
     server = MCPServer(
         "biwenger",
-        version="0.2.1",
+        version="0.2.2",
         log_level="WARNING",
         instructions=(
-            "Biwenger de consulta: LaLiga Clásica y sistemas de puntuación estándar. "
+            "Biwenger de consulta: LaLiga con fichajes Clásica y sistemas de puntuación predefinidos. "
             "Consulta get_context primero. Fundamenta el asesoramiento en estos datos y sus fechas; "
             "distingue valor de mercado, precio de venta, saldo y puja máxima. "
             "No inventes información ausente. No se pueden ejecutar pujas, ventas ni alineaciones. "

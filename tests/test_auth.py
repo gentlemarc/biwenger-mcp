@@ -14,7 +14,9 @@ def account_league(score_id=2, **updates):
         "id": 9001,
         "name": "Liga sintética",
         "competition": "la-liga",
-        "mode": "classic",
+        "mode": "league",
+        "type": "normal",
+        "marketMode": "classic",
         "scoreID": score_id,
         "user": {"id": 8001, "email": "private@example.test"},
         "settings": {"customScore": ""},
@@ -41,7 +43,17 @@ def auth_handler(requests, leagues, *, login_status=200, account_status=200, hom
                 home_status,
                 json={
                     "status": home_status,
-                    "data": {"league": {"id": 9001, "scoreID": 2}, "user": {"id": 8001}},
+                    "data": {
+                        "league": {
+                            "id": 9001,
+                            "mode": "league",
+                            "type": "normal",
+                            "marketMode": "classic",
+                            "scoreID": 2,
+                        },
+                        "user": {"id": 8001},
+                        "competition": "la-liga",
+                    },
                 },
             )
         return httpx.Response(404, json={"status": 404, "data": {}})
@@ -53,10 +65,12 @@ async def test_login_discovers_only_compatible_leagues_and_verifies_home():
     requests = []
     leagues = [
         account_league(),
-        account_league(id=9002, mode="fantasy"),
+        account_league(id=9002, marketMode="replenish"),
         account_league(id=9003, competition="premier-league"),
         account_league(id=9004, scoreID=4),
         account_league(id=9005, settings={"customScore": {"formula": "private"}}),
+        account_league(id=9006, mode="cup"),
+        account_league(id=9007, type="special"),
     ]
     client = AuthenticationClient(
         http_transport=httpx.MockTransport(auth_handler(requests, leagues))
@@ -64,6 +78,8 @@ async def test_login_discovers_only_compatible_leagues_and_verifies_home():
     try:
         session = await client.authenticate("person@example.test", "synthetic-password")
         assert [league.league_id for league in session.leagues] == [9001]
+        assert session.leagues[0].market_mode == "classic"
+        assert session.leagues[0].public()["market_mode"] == "classic"
         settings = await client.verify(session, session.leagues[0])
         assert settings.authenticated and settings.score_id == 2
         assert settings.client_version == "631"
@@ -114,7 +130,7 @@ async def test_login_rejects_missing_or_invalid_token(login_payload):
 
 
 @pytest.mark.parametrize("score_id", sorted(SUPPORTED_SCORES))
-async def test_all_standard_scores_are_discovered(score_id):
+async def test_all_predefined_scores_are_discovered(score_id):
     requests = []
     client = AuthenticationClient(
         http_transport=httpx.MockTransport(

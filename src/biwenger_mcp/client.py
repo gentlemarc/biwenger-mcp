@@ -188,11 +188,23 @@ class BiwengerClient:
             raise BiwengerError(
                 "context_mismatch", "La puntuación de la liga no coincide con la seleccionada."
             )
-        mode = normalized(league.mode or "")
-        mode_verified = mode in {"classic", "clasica"}
-        if mode in {"fantasy", "realistic", "realista", "intensive", "intensiva"}:
-            raise BiwengerError("context_mismatch", "El modo de liga no coincide con Clásica.")
-        missing_settings = not observed_scores or not mode_verified or competition is None
+        api_mode = normalized(league.mode or "")
+        league_type = normalized(league.type or "")
+        market_mode = normalized(league.market_mode or "")
+        league_kind_verified = api_mode == "league" and league_type == "normal"
+        market_mode_verified = market_mode == "classic"
+        if api_mode not in {"", "league"} or league_type not in {"", "normal"}:
+            raise BiwengerError("context_mismatch", "El tipo de liga no es compatible.")
+        if market_mode not in {"", "classic"}:
+            raise BiwengerError(
+                "context_mismatch", "El sistema de fichajes de la liga no coincide con Clásica."
+            )
+        missing_settings = (
+            not observed_scores
+            or not league_kind_verified
+            or not market_mode_verified
+            or competition is None
+        )
         if missing_settings and not self.settings.league_settings_confirmed:
             raise BiwengerError(
                 "settings_confirmation_required",
@@ -206,12 +218,15 @@ class BiwengerClient:
             "competition": "la-liga",
             "score_id": self.settings.score_id,
             "score_name": self.settings.score_name,
-            "mode": "classic",
+            "league_mode": "league",
+            "league_type": "normal",
+            "market_mode": "classic",
             "verification": {
                 "identity": "api",
                 "competition": "api" if competition is not None else "operator_confirmed",
                 "score": "api" if observed_scores else "operator_confirmed",
-                "mode": "api" if mode_verified else "operator_confirmed",
+                "league_kind": "api" if league_kind_verified else "operator_confirmed",
+                "market_mode": "api" if market_mode_verified else "operator_confirmed",
             },
             "season": catalog.season.model_dump(),
             "season_source": "public_catalog",

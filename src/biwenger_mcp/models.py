@@ -114,6 +114,7 @@ class League(APIModel):
     name: str | None = None
     mode: str | None = None
     type: str | None = None
+    market_mode: str | None = Field(default=None, alias="marketMode")
     score_id: StrictInt | None = Field(default=None, alias="scoreID")
     score: StrictInt | dict[str, Any] | None = None
     settings: dict[str, Any] | None = None

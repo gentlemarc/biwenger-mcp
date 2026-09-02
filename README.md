@@ -1,12 +1,12 @@
 # Biwenger MCP
 
-MCP local y no oficial para consultar una liga de **LaLiga en modo Clásica** desde Claude Desktop o Codex. Lee plantilla, alineación, presupuesto, mercado, ofertas, jugadores y próxima jornada. No contiene herramientas para pujar, comprar, vender, aceptar ofertas ni cambiar la alineación.
+MCP local y no oficial para consultar una liga de **LaLiga con fichajes Clásica** desde Claude Desktop o Codex. Lee plantilla, alineación, presupuesto, mercado, ofertas, jugadores y próxima jornada. No contiene herramientas para pujar, comprar, vender, aceptar ofertas ni cambiar la alineación.
 
 > Estado: beta privada. Los endpoints de Biwenger no forman parte de una API pública estable y pueden cambiar. Revisa las condiciones de uso antes de distribuir el proyecto.
 
 ## Instalación sencilla en Claude Desktop
 
-La extensión `biwenger-mcp-0.2.1.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
+La extensión `biwenger-mcp-0.2.2.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
 
 1. Descarga el `.mcpb` y su archivo `.sha256`.
 2. Abre **Claude Desktop → Settings → Extensions → Advanced settings → Install Extension**.
@@ -21,7 +21,7 @@ Consulta la [guía detallada](docs/INSTALL_CLAUDE.md), la [política de privacid
 
 ## Qué sistemas admite
 
-La liga debe pertenecer a LaLiga, usar modo Clásica y una puntuación estándar:
+La liga debe pertenecer a LaLiga, usar **fichajes Clásica** (`marketMode: classic`) y uno de los siete sistemas de puntuación predefinidos por Biwenger:
 
 | `scoreID` | Sistema |
 |---:|---|
@@ -33,7 +33,7 @@ La liga debe pertenecer a LaLiga, usar modo Clásica y una puntuación estándar
 | 7 | Feeberse Score |
 | 8 | Media AS y Feeberse |
 
-Se rechazan las puntuaciones personalizadas, otros modos y otras competiciones. Cada respuesta identifica el `scoreID`, el nombre del sistema y cuándo se obtuvieron sus fuentes.
+Se rechazan por ahora las puntuaciones personalizadas, otros sistemas de fichajes y otras competiciones. Cada respuesta identifica el `scoreID`, el nombre del sistema y cuándo se obtuvieron sus fuentes. En la API actual, una liga normal usa `mode: league` y `type: normal`; la opción «Clásica» de la aplicación se encuentra en `marketMode`.
 
 ## Herramientas
 
@@ -118,7 +118,7 @@ El script:
 4. conserva el `.mcpb` instalable como ZIP estricto y genera su SHA-256;
 5. crea por separado una copia `-dev-signed.mcpb` y verifica criptográficamente su firma de desarrollo.
 
-La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.1.md).
+La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.2.md).
 
 ## Validación real
 

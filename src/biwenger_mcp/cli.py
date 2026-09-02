@@ -52,7 +52,7 @@ def configure(path: Path) -> None:
     if score_id not in SUPPORTED_SCORES:
         raise BiwengerError("unsupported_score", "La puntuación no es compatible.")
     confirmed = input(
-        "¿Has comprobado en la app LaLiga, modo Clásica y puntuación estándar? [sí/no]: "
+        "¿Has comprobado en la app LaLiga, fichajes Clásica y un sistema de puntuación predefinido? [sí/no]: "
     ).strip().casefold() in {"sí", "si", "s", "yes"}
     settings = Settings(
         token=SecretStr(token),

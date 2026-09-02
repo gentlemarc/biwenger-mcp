@@ -12,7 +12,7 @@ La capa HTTP exige `data` como objeto y la capa de dominio valida los campos usa
 | Clave | Dominio y ruta | Parámetros fijos | Acceso | Campos utilizados |
 |---|---|---|---|---|
 | login | `biwenger.as.com/api/v2/auth/login` | JSON con correo y contraseña propia de Biwenger | Privado, pendiente de prueba final | Devuelve el token; la contraseña no se conserva |
-| account | `biwenger.as.com/api/v2/account` | Ninguno | Privado, estructura verificada | Descubre ligas, usuario por liga, competición, modo y `scoreID` |
+| account | `biwenger.as.com/api/v2/account` | Ninguno | Privado, estructura verificada | Descubre ligas, usuario por liga, competición, `mode`, `type`, `marketMode` y `scoreID` |
 | catalog | `cf.biwenger.com/api/v2/competitions/la-liga/data` | `lang=es`, `score={scoreID}` | Público, siete sistemas verificados | `players`, `teams`, `season`, `scores`, `scoreID`, `currency`, `update` |
 | player | `cf.biwenger.com/api/v2/players/la-liga/{slug}` | `lang=es`, `score={scoreID}`, campos cerrados | Público, verificado | Ficha, `reports`, `prices`, `news`, `competition` |
 | evolution | `cf.biwenger.com/api/v2/competitions/la-liga/market` | `interval=day`, `includeValues=true` | Público, verificado | `competition`, `values`, `ups`, `downs` |

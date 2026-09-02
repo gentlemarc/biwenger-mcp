@@ -79,7 +79,10 @@ async def test_market_sale_without_seller_remains_unknown(client_factory, settin
     assert market["data"]["sales"][0]["seller"] is None
 
 
-@pytest.mark.parametrize("field,value", [("id", 9002), ("scoreID", 5), ("mode", "fantasy")])
+@pytest.mark.parametrize(
+    "field,value",
+    [("id", 9002), ("scoreID", 5), ("marketMode", "replenish"), ("mode", "cup")],
+)
 async def test_reject_other_league_score_or_mode(client_factory, settings, field, value):
     client, requests, _ = client_factory(
         settings, mutate=lambda d: d["home"]["league"].update({field: value})
@@ -107,6 +110,8 @@ async def test_missing_league_settings_require_explicit_local_confirmation(
     def remove(d):
         d["home"]["league"].pop("scoreID")
         d["home"]["league"].pop("mode")
+        d["home"]["league"].pop("type")
+        d["home"]["league"].pop("marketMode")
 
     client, _, _ = client_factory(settings, mutate=remove)
     with pytest.raises(BiwengerError) as error:
@@ -117,6 +122,7 @@ async def test_missing_league_settings_require_explicit_local_confirmation(
     context = (await client.get_context())["data"]["private_context"]
     assert context["verification"]["score"] == "operator_confirmed"
     assert context["verification"]["identity"] == "api"
+    assert context["verification"]["market_mode"] == "operator_confirmed"
 
 
 async def test_next_round_unknown_and_unsorted_events(client_factory, settings):
