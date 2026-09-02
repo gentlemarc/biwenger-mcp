@@ -1,17 +1,17 @@
 # Contratos de Biwenger observados
 
 Referencia: repositorio `pablopb3/biwenger-api`, commit `1b5172c622ba868a832576822ce6d2071f9c1349` (2020-01-25).
-Comprobaciones realizadas el 2026-08-31. El diagnóstico con sesión real valida `home`, `user` y `market`.
+Comprobaciones realizadas entre el 2026-08-31 y el 2026-09-02. El diagnóstico con sesión real valida `home`, `user` y `market`.
 En la respuesta observada, `sales[].user` puede ser `null`; el vendedor permanece desconocido y las
 ventas propias se excluyen cruzando los IDs con la plantilla.
 No se ha accedido a una cuenta mediante un código de invitación.
 
-Todas las consultas deportivas implementadas son **GET**. El único `POST` externo es el inicio de sesión iniciado desde el asistente local. El estado HTTP y el campo `status` del JSON deben ser 200.
-La capa HTTP exige `data` como objeto y la capa de dominio valida los campos usados; no devuelve un éxito falso.
+Todas las consultas deportivas implementadas son **GET**. El único `POST` externo es el inicio de sesión iniciado desde el asistente local. El estado HTTP debe ser 200 y las respuestas deportivas también deben indicar `status: 200`.
+El login actual devuelve `token` en la raíz; las consultas deportivas devuelven `data` como objeto. La capa de dominio valida los campos usados y no devuelve un éxito falso.
 
 | Clave | Dominio y ruta | Parámetros fijos | Acceso | Campos utilizados |
 |---|---|---|---|---|
-| login | `biwenger.as.com/api/v2/auth/login` | JSON con correo y contraseña propia de Biwenger | Privado, pendiente de prueba final | Devuelve el token; la contraseña no se conserva |
+| login | `biwenger.as.com/api/v2/auth/login` | JSON con correo y contraseña propia de Biwenger | Privado, verificado desde el asistente de Claude Desktop | Devuelve `token` en la raíz; la contraseña no se conserva |
 | account | `biwenger.as.com/api/v2/account` | Ninguno | Privado, estructura verificada | Descubre ligas, usuario por liga, competición, `mode`, `type`, `marketMode` y `scoreID` |
 | catalog | `cf.biwenger.com/api/v2/competitions/la-liga/data` | `lang=es`, `score={scoreID}` | Público, siete sistemas verificados | `players`, `teams`, `season`, `scores`, `scoreID`, `currency`, `update` |
 | player | `cf.biwenger.com/api/v2/players/la-liga/{slug}` | `lang=es`, `score={scoreID}`, campos cerrados | Público, verificado | Ficha, `reports`, `prices`, `news`, `competition` |
@@ -38,5 +38,5 @@ Los IDs se descubren desde la cuenta autenticada y se verifican contra la liga e
 
 ## Comprobaciones manuales pendientes
 
-1. Comprobar manualmente los ajustes omitidos por la API y las cantidades, alineación y mercado en la app.
-2. Confirmar en la interfaz de Codex las llamadas privadas. Las pruebas sintéticas y `stdio` no reemplazan este paso.
+1. Completar una comparación exhaustiva de cantidades, alineación y mercado con la aplicación.
+2. Repetir la instalación en un perfil limpio antes de publicar una release abierta.
