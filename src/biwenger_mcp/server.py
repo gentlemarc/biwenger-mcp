@@ -27,7 +27,7 @@ def build_server(
     enabled = enabled_tools(report)
     server = MCPServer(
         "biwenger",
-        version="0.2.0",
+        version="0.2.1",
         log_level="WARNING",
         instructions=(
             "Biwenger de consulta: LaLiga Clásica y sistemas de puntuación estándar. "

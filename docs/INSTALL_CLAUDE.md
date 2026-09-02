@@ -2,7 +2,7 @@
 
 Esta versión requiere Claude Desktop `1.40609.0` o posterior. El usuario no necesita instalar Python, `uv` ni usar la terminal.
 
-1. Descarga `biwenger-mcp-0.2.0.mcpb` y comprueba el SHA-256 publicado junto al archivo.
+1. Descarga `biwenger-mcp-0.2.1.mcpb` y comprueba el SHA-256 publicado junto al archivo.
 2. En Claude Desktop abre **Settings → Extensions → Advanced settings → Install Extension** y elige el `.mcpb`. También puedes abrir el archivo con Claude Desktop.
 3. Inicia un chat nuevo y pide a Claude que use `connect_biwenger`.
 4. En la página local que se abre, escribe el correo y la contraseña propia de Biwenger. Si la cuenta se creó con Google y no tiene contraseña propia, establécela mediante la recuperación oficial de Biwenger. No introduzcas la contraseña de Google.

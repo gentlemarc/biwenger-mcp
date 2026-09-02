@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "biwenger-mcp",
   "display_name": "Biwenger MCP",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Consulta tu liga de Biwenger desde Claude Desktop sin modificar el equipo.",
   "long_description": "Extensión local y no oficial para LaLiga en modo Clásica. Conecta una cuenta mediante un asistente que solo escucha en 127.0.0.1, guarda la sesión en el llavero de macOS y ofrece herramientas de consulta para plantilla, presupuesto, mercado, jugadores y jornada.",
   "author": {

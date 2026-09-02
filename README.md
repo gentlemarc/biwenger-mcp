@@ -6,7 +6,7 @@ MCP local y no oficial para consultar una liga de **LaLiga en modo Clásica** de
 
 ## Instalación sencilla en Claude Desktop
 
-La extensión `biwenger-mcp-0.2.0.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
+La extensión `biwenger-mcp-0.2.1.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
 
 1. Descarga el `.mcpb` y su archivo `.sha256`.
 2. Abre **Claude Desktop → Settings → Extensions → Advanced settings → Install Extension**.
@@ -118,7 +118,7 @@ El script:
 4. conserva el `.mcpb` instalable como ZIP estricto y genera su SHA-256;
 5. crea por separado una copia `-dev-signed.mcpb` y verifica criptográficamente su firma de desarrollo.
 
-La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.0.md).
+La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.1.md).
 
 ## Validación real
 

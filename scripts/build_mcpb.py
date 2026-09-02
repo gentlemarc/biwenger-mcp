@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 EXACT_FILES = {
     "mcpb/manifest.json": "manifest.json",
     "mcpb_server.py": "mcpb_server.py",

@@ -29,7 +29,7 @@ def auth_handler(requests, leagues, *, login_status=200, account_status=200, hom
         if str(request.url) == LOGIN_URL:
             return httpx.Response(
                 login_status,
-                json={"status": login_status, "data": {"token": "synthetic-auth-token"}},
+                json={"status": login_status, "token": "synthetic-auth-token"},
             )
         if str(request.url) == ACCOUNT_URL:
             return httpx.Response(
@@ -70,6 +70,45 @@ async def test_login_discovers_only_compatible_leagues_and_verifies_home():
         assert all(request.url.host == "biwenger.as.com" for request in requests)
         assert requests[0].method == "POST"
         assert all(request.method == "GET" for request in requests[1:])
+    finally:
+        await client.close()
+
+
+async def test_login_accepts_legacy_nested_token_without_exposing_it():
+    requests = []
+
+    def handler(request):
+        if str(request.url) == LOGIN_URL:
+            return httpx.Response(200, json={"status": 200, "data": {"token": "legacy-token"}})
+        return auth_handler(requests, [account_league()])(request)
+
+    client = AuthenticationClient(http_transport=httpx.MockTransport(handler))
+    try:
+        session = await client.authenticate("person@example.test", "password")
+        assert session.token.get_secret_value() == "legacy-token"
+    finally:
+        await client.close()
+
+
+@pytest.mark.parametrize(
+    "login_payload",
+    [
+        {"status": 200},
+        {"status": 200, "token": ""},
+        {"status": 200, "token": "invalid token"},
+        {"status": 200, "token": {"unexpected": True}},
+    ],
+)
+async def test_login_rejects_missing_or_invalid_token(login_payload):
+    def handler(request):
+        assert str(request.url) == LOGIN_URL
+        return httpx.Response(200, json=login_payload)
+
+    client = AuthenticationClient(http_transport=httpx.MockTransport(handler))
+    try:
+        with pytest.raises(BiwengerError) as error:
+            await client.authenticate("person@example.test", "password")
+        assert error.value.code == "schema_changed"
     finally:
         await client.close()
 

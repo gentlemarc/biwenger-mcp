@@ -87,7 +87,7 @@ class AuthenticationClient:
             transport=http_transport,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "biwenger-readonly-mcp/0.2",
+                "User-Agent": "biwenger-readonly-mcp/0.2.1",
                 "x-lang": "es",
             },
         )
@@ -147,9 +147,16 @@ class AuthenticationClient:
             password = ""
         self._status(response, login=True)
         payload = await self._payload(response)
-        data = payload.get("data")
-        token = data.get("token") if isinstance(data, dict) else None
+        # La API web actual devuelve el token en la raíz. Conservamos la
+        # estructura antigua anidada para no romper instalaciones previas.
+        token = payload.get("token")
+        if token is None:
+            data = payload.get("data")
+            token = data.get("token") if isinstance(data, dict) else None
         if not isinstance(token, str) or not token.strip():
+            raise BiwengerError("schema_changed", "Biwenger no devolvió una sesión válida.")
+        token = token.strip()
+        if any(character.isspace() for character in token):
             raise BiwengerError("schema_changed", "Biwenger no devolvió una sesión válida.")
         secret = SecretStr(token)
         leagues = await self.discover(secret)
