@@ -16,8 +16,9 @@ Comprobadas el 2026-08-30 en el Mac de desarrollo.
 | Llamadas privadas mediante cliente MCP `stdio` | Verificadas en un proceso real independiente |
 | Manifiesto MCPB 0.4 | Validado con `@anthropic-ai/mcpb` 2.1.2 |
 | Contenido del paquete | 22 archivos de la lista cerrada; sin sesión, token, cachés, pruebas ni claves de firma |
-| Firma de desarrollo | Firma MCPB autocreada y firma PKCS#7 verificada criptográficamente |
+| Firma de desarrollo | Copia separada `-dev-signed.mcpb`; firma PKCS#7 verificada criptográficamente |
 | Runtime extraído del MCPB | `uv --frozen`, handshake, descubrimiento y consulta pública correctos |
+| Vista previa en Claude Desktop | La copia con firma anexa es rechazada por su lector ZIP; el paquete instalable se entrega sin bytes posteriores al ZIP |
 | Instalación en Claude Desktop | Pendiente del usuario; Codex no abrirá ni instalará la extensión |
 
 Los tests usan exclusivamente datos sintéticos: no contienen la liga real, el código de invitación ni credenciales.

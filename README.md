@@ -115,10 +115,10 @@ El script:
 1. copia a una carpeta temporal solo el manifiesto, código, lockfile, icono, licencia y documentación pública permitidos;
 2. valida y empaqueta con MCPB;
 3. compara todos los miembros del ZIP con la lista esperada;
-4. firma el artefacto con un certificado autocreado de pruebas;
-5. verifica la firma y genera el SHA-256.
+4. conserva el `.mcpb` instalable como ZIP estricto y genera su SHA-256;
+5. crea por separado una copia `-dev-signed.mcpb` y verifica criptográficamente su firma de desarrollo.
 
-La salida queda en `dist/`, que no se versiona. Para una release pública debe usarse una firma de distribución y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.0.md).
+La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.0.md).
 
 ## Validación real
 

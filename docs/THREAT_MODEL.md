@@ -29,4 +29,4 @@ Los activos protegidos son la contraseña de Biwenger, el token de sesión, los 
 
 Un proceso con acceso a la sesión del usuario de macOS o al proceso MCP puede acceder a datos que el usuario ya puede consultar. El token tiene los permisos de la sesión original, aunque este código solo exponga lecturas. Biwenger no ofrece aquí una API OAuth pública documentada con permisos limitados. La API privada puede cambiar o dejar de admitir estas llamadas.
 
-La firma autocreada del paquete de desarrollo confirma integridad después de construirlo, pero no aporta la identidad de una autoridad pública. Una distribución estable deberá usar una identidad de firma adecuada y publicar el SHA-256 por un canal independiente.
+La copia autocreada `-dev-signed.mcpb` confirma criptográficamente el proceso de construcción, pero no aporta la identidad de una autoridad pública y Claude Desktop no puede previsualizar actualmente ese formato anexo. El paquete instalable es un ZIP estricto y su integridad se publica mediante SHA-256. Una distribución estable deberá revisar de nuevo el formato de firma y usar una identidad adecuada.

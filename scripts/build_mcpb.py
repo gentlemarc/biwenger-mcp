@@ -75,8 +75,12 @@ def main() -> int:
     parser.add_argument("--unsigned", action="store_true")
     args = parser.parse_args()
     output = ROOT / "dist" / f"biwenger-mcp-{VERSION}.mcpb"
+    signed_output = ROOT / "dist" / f"biwenger-mcp-{VERSION}-dev-signed.mcpb"
     output.parent.mkdir(exist_ok=True)
     output.unlink(missing_ok=True)
+    signed_output.unlink(missing_ok=True)
+    output.with_suffix(output.suffix + ".sha256").unlink(missing_ok=True)
+    signed_output.with_suffix(signed_output.suffix + ".sha256").unlink(missing_ok=True)
 
     with tempfile.TemporaryDirectory(prefix="biwenger-mcpb-") as temporary:
         staging = Path(temporary) / "bundle"
@@ -105,14 +109,27 @@ def main() -> int:
         if actual != expected:
             raise SystemExit(f"Contenido inesperado en MCPB: {sorted(actual ^ expected)}")
         if not args.unsigned:
-            run([args.mcpb_bin, "sign", str(output), "--self-signed"], cwd=Path(temporary))
-            verify_detached_signature(output, Path(temporary))
+            # Claude Desktop currently previews MCPB as a strict ZIP and rejects the
+            # appended PKCS#7 block. Keep the installable artifact as a plain MCPB and
+            # create a separately named signed copy for cryptographic verification.
+            shutil.copy2(output, signed_output)
+            run(
+                [args.mcpb_bin, "sign", str(signed_output), "--self-signed"],
+                cwd=Path(temporary),
+            )
+            verify_detached_signature(signed_output, Path(temporary))
 
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     checksum = output.with_suffix(output.suffix + ".sha256")
     checksum.write_text(f"{digest}  {output.name}\n")
     print(output)
     print(checksum)
+    if signed_output.exists():
+        signed_digest = hashlib.sha256(signed_output.read_bytes()).hexdigest()
+        signed_checksum = signed_output.with_suffix(signed_output.suffix + ".sha256")
+        signed_checksum.write_text(f"{signed_digest}  {signed_output.name}\n")
+        print(signed_output)
+        print(signed_checksum)
     return 0
 
 
