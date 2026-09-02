@@ -6,7 +6,7 @@ MCP local y no oficial para consultar una liga de **LaLiga con fichajes Clásica
 
 ## Instalación sencilla en Claude Desktop
 
-La extensión `biwenger-mcp-0.2.2.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
+La extensión `biwenger-mcp-0.3.0.mcpb` usa el runtime `uv` administrado por Claude Desktop. En macOS no hace falta instalar Python ni abrir una terminal.
 
 1. Descarga el `.mcpb` y su archivo `.sha256`.
 2. Abre **Claude Desktop → Settings → Extensions → Advanced settings → Install Extension**.
@@ -15,7 +15,7 @@ La extensión `biwenger-mcp-0.2.2.mcpb` usa el runtime `uv` administrado por Cla
 5. Elige una liga compatible y reinicia la extensión.
 6. Ejecuta `get_context` y comprueba que liga y puntuación sean correctas.
 
-Las cuentas creadas con Google pueden establecer una contraseña propia mediante la [recuperación oficial de Biwenger](https://www.biwenger.com/faq/cuentas-contrasenas-combinar-cuentas/). Nunca introduzcas la contraseña de Google en esta extensión.
+El asistente tiene una identidad visual propia, indica de forma visible que es un proyecto no oficial y no carga imágenes, fuentes ni código desde servidores externos. Las cuentas creadas con Google, Apple o Facebook pueden establecer una contraseña propia mediante la [recuperación oficial de Biwenger](https://www.biwenger.com/faq/cuentas-contrasenas-combinar-cuentas/). Nunca introduzcas la contraseña de esos proveedores en esta extensión.
 
 Consulta la [guía detallada](docs/INSTALL_CLAUDE.md), la [política de privacidad](docs/PRIVACY.md) y el [modelo de amenazas](docs/THREAT_MODEL.md).
 
@@ -57,7 +57,7 @@ Al arrancar se ejecuta un diagnóstico acotado. Solo se registran las consultas 
 
 - El asistente escucha solo en `127.0.0.1`, usa nonce, caduca en diez minutos, limita los cuerpos y no registra credenciales.
 - La contraseña se usa exclusivamente para `POST /api/v2/auth/login` y se descarta después.
-- El token se guarda en el llavero de macOS. El archivo de preferencias no contiene secretos.
+- El token se guarda en el almacenamiento seguro del sistema; la primera versión para macOS utiliza su Llavero. El archivo de preferencias no contiene secretos.
 - El transporte deportivo permite únicamente `GET` contra hosts y rutas cerradas.
 - No se siguen redirecciones ni proxies del entorno y se limitan tiempos, reintentos y tamaños de respuesta.
 - Los campos ausentes se devuelven como desconocidos; no se convierten en cero.
@@ -118,7 +118,7 @@ El script:
 4. conserva el `.mcpb` instalable como ZIP estricto y genera su SHA-256;
 5. crea por separado una copia `-dev-signed.mcpb` y verifica criptográficamente su firma de desarrollo.
 
-La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.2.2.md).
+La copia firmada de desarrollo no se instala: la versión actual de Claude Desktop rechaza los bytes PKCS#7 añadidos después del ZIP durante la vista previa. La salida principal sin ese sufijo es el paquete instalable. Todo queda en `dist/`, que no se versiona. Para una release pública debe revisarse de nuevo la compatibilidad de firma y adjuntar también [las notas de versión](docs/RELEASE_NOTES_0.3.0.md).
 
 ## Validación real
 

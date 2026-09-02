@@ -16,6 +16,7 @@ Los activos protegidos son la contraseña de Biwenger, el token de sesión, los 
 | Amenaza | Control |
 |---|---|
 | Otro sitio intenta enviar el formulario local | `Origin`, `Host`, dirección loopback y nonce aleatorio obligatorios; CSP, `frame-ancestors 'none'` y caducidad de diez minutos. |
+| Un recurso visual externo rastrea o altera el asistente | HTML, CSS y JavaScript autocontenidos; CSP con `default-src 'none'`; no se cargan fuentes, imágenes ni scripts remotos. |
 | Acceso desde la red local | El socket escucha exclusivamente en `127.0.0.1` y rechaza clientes o hosts distintos. |
 | Fuerza bruta o cuerpos enormes | Un solo asistente activo, caducidad y límite de 16 KiB; Biwenger conserva sus propios límites de acceso. |
 | Filtración en argumentos, logs o errores | No existen argumentos MCP de credenciales, no se registran cuerpos y los errores son mensajes cerrados. |

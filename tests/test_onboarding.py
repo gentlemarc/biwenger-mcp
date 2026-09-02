@@ -142,3 +142,49 @@ def test_disconnect_requires_local_confirmation():
             assert store.disconnected is True
     finally:
         session.stop()
+
+
+def test_connect_page_is_distinct_local_and_platform_neutral():
+    session = WizardSession("connect", MemoryStore(), FakeAuth)
+    session.start(open_browser=False)
+    try:
+        with httpx.Client(base_url=session.origin, trust_env=False) as client:
+            response = client.get(f"/connect/{session.nonce}")
+        page = response.text
+        policy = response.headers["content-security-policy"]
+        assert response.status_code == 200
+        assert "Biwenger MCP" in page
+        assert "Proyecto no oficial" in page
+        assert "localmente en tu ordenador" in page
+        assert "almacenamiento seguro del sistema" in page
+        assert "Solo lectura" in page
+        assert "Google, Apple o Facebook" in page
+        assert "www.biwenger.com/faq/cuentas-contrasenas-combinar-cuentas/" in page
+        assert "llavero" not in page.casefold() and "tu mac" not in page.casefold()
+        assert "cdn.biwenger" not in page and "<script src=" not in page
+        assert "innerHTML" not in page and "textContent = league.name" in page
+        assert 'role="group" aria-label="Ligas compatibles"' in page
+        assert "setAttribute('role', 'listitem')" not in page
+        assert page.count("<script nonce=") == 1
+        assert f"script-src 'nonce-{session.script_nonce}'" in policy
+        assert "default-src 'none'" in policy and "connect-src 'self'" in policy
+    finally:
+        session.stop()
+
+
+def test_disconnect_page_uses_the_same_safe_design_language():
+    session = WizardSession("disconnect", MemoryStore(), FakeAuth)
+    session.start(open_browser=False)
+    try:
+        with httpx.Client(base_url=session.origin, trust_env=False) as client:
+            response = client.get(f"/disconnect/{session.nonce}")
+        page = response.text
+        assert response.status_code == 200
+        assert "Desconecta <em>con control.</em>" in page
+        assert "almacenamiento seguro del sistema" in page
+        assert "No elimina tu cuenta de Biwenger" in page
+        assert "Proyecto no oficial" in page
+        assert "llavero" not in page.casefold() and "macos" not in page.casefold()
+        assert "<script src=" not in page and page.count("<script nonce=") == 1
+    finally:
+        session.stop()

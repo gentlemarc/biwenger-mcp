@@ -107,7 +107,7 @@ class ReadOnlyTransport:
             follow_redirects=False,
             trust_env=False,
             transport=http_transport,
-            headers={"Accept": "application/json", "User-Agent": "biwenger-readonly-mcp/0.2.2"},
+            headers={"Accept": "application/json", "User-Agent": "biwenger-readonly-mcp/0.3.0"},
         )
         self._cache: dict[Endpoint, Snapshot] = {}
         self._locks: dict[Endpoint, asyncio.Lock] = {}

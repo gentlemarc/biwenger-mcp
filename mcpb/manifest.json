@@ -2,9 +2,9 @@
   "manifest_version": "0.4",
   "name": "biwenger-mcp",
   "display_name": "Biwenger MCP",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Consulta tu liga de Biwenger desde Claude Desktop sin modificar el equipo.",
-  "long_description": "Extensión local y no oficial para LaLiga con fichajes Clásica y los siete sistemas de puntuación predefinidos. Conecta una cuenta mediante un asistente que solo escucha en 127.0.0.1, guarda la sesión en el llavero de macOS y ofrece herramientas de consulta para plantilla, presupuesto, mercado, jugadores y jornada.",
+  "long_description": "Extensión local y no oficial para LaLiga con fichajes Clásica y los siete sistemas de puntuación predefinidos. Conecta una cuenta mediante un asistente local con identidad propia, guarda la sesión en el almacenamiento seguro del sistema y ofrece herramientas de consulta para plantilla, presupuesto, mercado, jugadores y jornada.",
   "author": {
     "name": "gentlemarc",
     "url": "https://github.com/gentlemarc"

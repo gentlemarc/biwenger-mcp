@@ -1,10 +1,12 @@
 # Política de privacidad de Biwenger MCP
 
-Última actualización: 31 de agosto de 2026.
+Última actualización: 2 de septiembre de 2026.
 
 Biwenger MCP es un proyecto local, de código abierto y no oficial. No opera un servidor propio, no incluye telemetría y no recibe datos de sus usuarios. La extensión se comunica directamente desde el ordenador con `biwenger.as.com` y `cf.biwenger.com` para realizar las consultas solicitadas.
 
-El asistente de conexión recibe temporalmente el correo y la contraseña propia de Biwenger. La contraseña se usa una sola vez contra `/api/v2/auth/login`, no se escribe en disco y se descarta después de esa petición. Nunca debe introducirse una contraseña de Google, Apple o Facebook. El token de sesión resultante se guarda en el llavero de macOS bajo el servicio `com.gentlemarc.biwenger-mcp`.
+El asistente de conexión recibe temporalmente el correo y la contraseña propia de Biwenger. La contraseña se usa una sola vez contra `/api/v2/auth/login`, no se escribe en disco y se descarta después de esa petición. Nunca debe introducirse una contraseña de Google, Apple o Facebook. El token de sesión resultante se guarda en el almacenamiento seguro del sistema; en macOS utiliza el servicio de Llavero `com.gentlemarc.biwenger-mcp`.
+
+La interfaz del asistente está incluida por completo en la extensión. No descarga imágenes, fuentes, hojas de estilo ni scripts remotos. El único enlace externo de la página conduce, por decisión del usuario, a la ayuda oficial para cuentas de Biwenger.
 
 El archivo `~/Library/Application Support/Biwenger MCP/settings.json` contiene únicamente el ID interno de la liga, el ID de usuario dentro de esa liga, la competición, la puntuación, la versión de cliente y preferencias técnicas. No contiene correo, contraseña ni token. La herramienta `disconnect_biwenger` elimina el elemento del llavero y ese archivo tras una confirmación local.
 

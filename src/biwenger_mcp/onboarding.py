@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import hmac
-import html
 import json
 import secrets
 import threading
@@ -17,6 +16,7 @@ from urllib.parse import parse_qs, urlparse
 from .auth import AuthenticationClient, AuthenticationSession, LeagueChoice
 from .config import SecureSettingsStore
 from .errors import BiwengerError
+from .onboarding_ui import render_page
 
 MAX_FORM_BYTES = 16 * 1024
 WIZARD_TTL_SECONDS = 10 * 60
@@ -65,7 +65,7 @@ class WizardSession:
         session = self
 
         class Handler(BaseHTTPRequestHandler):
-            server_version = "BiwengerSetup/0.2"
+            server_version = "BiwengerSetup/0.3"
             sys_version = ""
 
             def log_message(self, format, *args):
@@ -243,26 +243,7 @@ class WizardSession:
             self.server = None
 
     def _page(self) -> str:
-        title = "Conectar Biwenger" if self.mode == "connect" else "Desconectar Biwenger"
-        safe_title = html.escape(title)
-        if self.mode == "connect":
-            content = """
-<p>Usa tu correo y tu <strong>contraseña propia de Biwenger</strong>. Nunca introduzcas aquí la contraseña de Google.</p>
-<form id="login"><label>Correo<input name="email" type="email" maxlength="320" required autocomplete="username"></label><label>Contraseña de Biwenger<input name="password" type="password" maxlength="1024" required autocomplete="current-password"></label><button>Continuar</button></form>
-<section id="leagues" hidden><h2>Elige una liga compatible</h2><div id="choices"></div></section>
-<p id="status" role="status"></p>
-<script nonce="{script_nonce}">
-const nonce={nonce_json}; const status=document.querySelector('#status');
-const formBody=o=>new URLSearchParams({{...o,nonce}});
-async function send(path,data){{const response=await fetch(path,{{method:'POST',headers:{{'Content-Type':'application/x-www-form-urlencoded'}},body:formBody(data)}});const value=await response.json();if(!response.ok)throw new Error(value.error?.message||'No se pudo completar');return value;}}
-document.querySelector('#login').addEventListener('submit',async e=>{{e.preventDefault();status.textContent='Comprobando…';const f=new FormData(e.target);try{{const value=await send('/api/login/'+nonce,{{email:f.get('email'),password:f.get('password')}});e.target.reset();e.target.hidden=true;const box=document.querySelector('#choices');for(const league of value.leagues){{const b=document.createElement('button');b.type='button';b.textContent=league.name+' · '+league.score_name;b.onclick=async()=>{{try{{status.textContent='Verificando liga…';await send('/api/select/'+nonce,{{league_id:String(league.league_id)}});document.querySelector('#leagues').hidden=true;status.textContent='Cuenta conectada. Vuelve a Claude Desktop y reinicia la extensión.';}}catch(err){{status.textContent=err.message;}}}};box.appendChild(b);}}document.querySelector('#leagues').hidden=false;status.textContent='';}}catch(err){{e.target.querySelector('[name=password]').value='';status.textContent=err.message;}}}});
-</script>""".format(script_nonce=self.script_nonce, nonce_json=json.dumps(self.nonce))
-        else:
-            content = """
-<p>Esta acción elimina del llavero de macOS la sesión de Biwenger y borra únicamente la configuración no sensible de esta extensión.</p>
-<button id="disconnect">Desconectar cuenta</button><p id="status" role="status"></p>
-<script nonce="{script_nonce}">const nonce={nonce_json};document.querySelector('#disconnect').onclick=async()=>{{const status=document.querySelector('#status');status.textContent='Desconectando…';const response=await fetch('/api/disconnect/'+nonce,{{method:'POST',headers:{{'Content-Type':'application/x-www-form-urlencoded'}},body:new URLSearchParams({{nonce,confirm:'disconnect'}})}});const value=await response.json();status.textContent=response.ok?'Cuenta desconectada. Reinicia la extensión en Claude Desktop.':(value.error?.message||'No se pudo desconectar');}};</script>""".format(script_nonce=self.script_nonce, nonce_json=json.dumps(self.nonce))
-        return """<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{title}</title><style>body{{font:16px system-ui;max-width:620px;margin:8vh auto;padding:24px;color:#17212b}}main{{border:1px solid #d8dee4;border-radius:16px;padding:28px;box-shadow:0 8px 30px #0001}}label{{display:block;margin:16px 0}}input,button{{box-sizing:border-box;width:100%;font:inherit;padding:12px;border:1px solid #aab3bd;border-radius:9px}}button{{margin:8px 0;background:#146c43;color:white;border:0;cursor:pointer}}#status{{min-height:24px}}</style></head><body><main><h1>{title}</h1>{content}<hr><small>Proyecto no oficial. La página solo escucha en 127.0.0.1 y caduca en diez minutos.</small></main></body></html>""".format(title=safe_title, content=content)
+        return render_page(self.mode, self.nonce, self.script_nonce)
 
 
 class WizardManager:

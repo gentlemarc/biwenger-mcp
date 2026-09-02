@@ -27,7 +27,7 @@ def build_server(
     enabled = enabled_tools(report)
     server = MCPServer(
         "biwenger",
-        version="0.2.2",
+        version="0.3.0",
         log_level="WARNING",
         instructions=(
             "Biwenger de consulta: LaLiga con fichajes Clásica y sistemas de puntuación predefinidos. "
@@ -95,7 +95,7 @@ def build_server(
         ),
     )
     async def disconnect_biwenger() -> CallToolResult:
-        """Abre una confirmación local para eliminar la sesión del llavero y la configuración de esta extensión."""
+        """Abre una confirmación local para eliminar la sesión del almacenamiento seguro y la configuración de esta extensión."""
         return await respond(lambda: asyncio.to_thread(manager.start, "disconnect"))
 
     @register("get_context")

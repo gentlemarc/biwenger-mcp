@@ -87,7 +87,7 @@ class AuthenticationClient:
             transport=http_transport,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "biwenger-readonly-mcp/0.2.2",
+                "User-Agent": "biwenger-readonly-mcp/0.3.0",
                 "x-lang": "es",
             },
         )
